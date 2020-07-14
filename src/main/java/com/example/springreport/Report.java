@@ -6,6 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.util.Objects;
 
 @Entity
 @Table(name = "report")
@@ -144,6 +145,27 @@ public class Report {
 
     public void setSeen(String seen) {
         this.seen = seen;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Report that = (Report) o;
+        return name.equals(that.name) &&
+                scanTool.equals(that.scanTool) &&
+                application.equals(that.application) &&
+                component.equals(that.component) &&
+                title.equals(that.title) &&
+                severity.equals(that.severity) &&
+                priority.equals(that.priority) &&
+                fullText.equals(that.fullText) &&
+                seen.equals(that.seen);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.id, this.name, this.scanTool, this.application,
+                this.component, this.title, this.severity, this.priority, this.fullText, this.seen);
     }
 
 //    public String getDateFirstSeen() { return dateFirstSeen; }
