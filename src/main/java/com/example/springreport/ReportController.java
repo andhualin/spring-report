@@ -1,12 +1,9 @@
 package com.example.springreport;
 
-import com.example.springreport.models.Report;
-import com.example.springreport.repositories.ReportRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -24,6 +21,11 @@ public class ReportController {
     public List<Report> getAllReport() {
         return repository.findAll();
     }
+
+    // GET report by id
+    @GetMapping("/reports/{id}")
+    public Report getReportById(@PathVariable Long id) {
+        return repository.findById(id).orElseThrow(() -> new ReportNotFoundException(id)); }
 
     // POST method to create a report
     @PostMapping("/reports")

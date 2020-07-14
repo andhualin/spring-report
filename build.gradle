@@ -19,7 +19,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
 	runtime("com.h2database:h2:1.3.176")
 	compile('org.postgresql:postgresql')
-	//	implementation('org.postgresql:postgresql')
+	compile('com.opencsv:opencsv:5.2')
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}

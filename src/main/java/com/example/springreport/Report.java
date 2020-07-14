@@ -1,5 +1,6 @@
-package com.example.springreport.models;
+package com.example.springreport;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -11,23 +12,49 @@ import javax.persistence.Table;
 public class Report {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy= GenerationType.AUTO)
     private Long id;
 
+    @Column(columnDefinition="TEXT")
     private String name;
+
+    @Column(columnDefinition="TEXT")
     private String scanTool;
+
+    @Column(columnDefinition="TEXT")
     private String application;
+
+    @Column(columnDefinition="TEXT")
     private String component;
+
+    @Column(columnDefinition="TEXT")
     private String title;
-    private double severity;
-    private double priority;
+
+    @Column(columnDefinition="TEXT")
+    private String severity;
+
+    @Column(columnDefinition="TEXT")
+    private String priority;
+
+    @Column(columnDefinition="TEXT")
     private String fullText;
-    private boolean seen;
 
-    protected Report() {}
+    @Column(columnDefinition="TEXT")
+    private String seen;
 
-    public Report(String name, String scantool, String application, String component, String title, double severity,
-                  double priority, String fullText, boolean seen) {
+//    private String dateFirstSeen;
+
+    public Report() {}
+
+    public Report(String name,
+                  String scantool,
+                  String application,
+                  String component,
+                  String title,
+                  String severity,
+                  String priority,
+                  String fullText,
+                  String seen) {
         this.name = name;
         this.scanTool = scantool;
         this.application = application;
@@ -38,7 +65,6 @@ public class Report {
         this.fullText = fullText;
         this.seen = seen;
     }
-
 
     public Long getId() {
         return id;
@@ -88,19 +114,19 @@ public class Report {
         this.title = title;
     }
 
-    public double getSeverity() {
+    public String getSeverity() {
         return severity;
     }
 
-    public void setSeverity(double severity) {
+    public void setSeverity(String severity) {
         this.severity = severity;
     }
 
-    public double getPriority() {
+    public String getPriority() {
         return priority;
     }
 
-    public void setPriority(double priority) {
+    public void setPriority(String priority) {
         this.priority = priority;
     }
 
@@ -112,11 +138,15 @@ public class Report {
         this.fullText = fullText;
     }
 
-    public boolean isSeen() {
+    public String isSeen() {
         return seen;
     }
 
-    public void setSeen(boolean seen) {
+    public void setSeen(String seen) {
         this.seen = seen;
     }
+
+//    public String getDateFirstSeen() { return dateFirstSeen; }
+//
+//    public void setDateFirstSeen(String dateFirstSeen) { this.dateFirstSeen = dateFirstSeen; }
 }
