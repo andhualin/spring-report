@@ -17,7 +17,7 @@ public class Report {
     private Long id;
 
     @Column(columnDefinition="TEXT")
-    private String name;
+    private String key;
 
     @Column(columnDefinition="TEXT")
     private String scanTool;
@@ -43,21 +43,22 @@ public class Report {
     @Column(columnDefinition="TEXT")
     private String seen;
 
-//    private String dateFirstSeen;
+    private String dateFirstSeen;
 
     public Report() {}
 
-    public Report(String name,
-                  String scantool,
+    public Report(String key,
+                  String scanTool,
                   String application,
                   String component,
                   String title,
                   String severity,
                   String priority,
                   String fullText,
-                  String seen) {
-        this.name = name;
-        this.scanTool = scantool;
+                  String seen,
+                  String dateFirstSeen) {
+        this.key = key;
+        this.scanTool = scanTool;
         this.application = application;
         this.component = component;
         this.title = title;
@@ -65,6 +66,7 @@ public class Report {
         this.priority = priority;
         this.fullText = fullText;
         this.seen = seen;
+        this.dateFirstSeen = dateFirstSeen;
     }
 
     public Long getId() {
@@ -75,12 +77,12 @@ public class Report {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getKey() {
+        return key;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public String getScanTool() {
@@ -147,12 +149,20 @@ public class Report {
         this.seen = seen;
     }
 
+    public String getDateFirstSeen() {
+        return dateFirstSeen;
+    }
+
+    public void setDateFirstSeen(String dateFirstSeen) {
+        this.dateFirstSeen = dateFirstSeen;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Report that = (Report) o;
-        return name.equals(that.name) &&
+        return key.equals(that.key) &&
                 scanTool.equals(that.scanTool) &&
                 application.equals(that.application) &&
                 component.equals(that.component) &&
@@ -164,7 +174,7 @@ public class Report {
     }
     @Override
     public int hashCode() {
-        return Objects.hash(this.id, this.name, this.scanTool, this.application,
+        return Objects.hash(this.id, this.key, this.scanTool, this.application,
                 this.component, this.title, this.severity, this.priority, this.fullText, this.seen);
     }
 

@@ -4,8 +4,13 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 public class ReportParser {
     public static List<Report> parseReport(String file) {
@@ -21,16 +26,37 @@ public class ReportParser {
 
                 if (fields.length == 9) {
                     if (isDouble(fields[5]) && isDouble(fields[6]) && isBoolean(fields[8])) {
+                        // remove whitespace in boolean field
+                        fields[8] = fields[8].replaceAll("\\s","");
+
+                        // todo: add in date first seen, right now default
+                        String dateFirstSeen = file;
+
+                        Pattern p = Pattern.compile("\\d\\d\\d\\d\\-\\d\\d\\-\\d\\d");   // the pattern to search for
+                        Matcher m = p.matcher(dateFirstSeen);
+                        if (m.find())
+                        {
+                            // parse out the regular expression .... idk
+                            dateFirstSeen = m.group();
+                        }
+                        else
+                        {
+                            System.out.println("Could not find date, setting to default date");
+                            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                            dateFirstSeen = dtf.format(LocalDateTime.now());
+                        }
+
+                        // create new report and insert to db
                         Report report = new Report(fields[0], fields[1], fields[2], fields[3], fields[4],
-                                fields[5], fields[6], fields[7], fields[8]);
+                                fields[5], fields[6], fields[7], fields[8], dateFirstSeen);
                         reports.add(report);
                     } else {
-                        System.err.print("LINE " + lineNumber + " IN FILE " + file +
-                                " has invalid data formatting. Will not be added to the database.\n");
+                        System.err.print("LINE " + lineNumber + " (" + file +
+                                ") has invalid data formatting. Will not be added to the database.\n");
                     }
                 } else {
-                    System.err.print("LINE " + lineNumber + " IN FILE " + file +
-                            " has invalid number of columns. Will not be added to the database.\n");
+                    System.err.print("LINE " + lineNumber + " (" + file +
+                            ") has invalid number of columns. Will not be added to the database.\n");
                 }
                 lineNumber++;
             }
@@ -61,29 +87,4 @@ public class ReportParser {
         }
     }
 
-    // todo: delete no longer used
-//    public static List<Report> parseCSVData(String file) {
-//        List<String[]> reportFields = new ArrayList<>();
-//        List<Report> reports = new ArrayList<>();
-//        try {
-//            FileReader filereader = new FileReader(file);
-//            CSVReader csvReader = new CSVReader(filereader);
-//            String[] nextLine;
-//
-//            // read line by line
-//            while ((nextLine = csvReader.readNext()) != null) {
-//                if (nextLine.length == 9) { // some entries are shorter or longer
-//                    reportFields.add(nextLine);
-//                    Report report = new Report(reportFields.get(0)[0],reportFields.get(0)[1],reportFields.get(0)[2],
-//                            reportFields.get(0)[3],reportFields.get(0)[4],reportFields.get(0)[5],reportFields.get(0)[6],
-//                            reportFields.get(0)[7],reportFields.get(0)[8]);
-//                    reports.add(report);
-//                }
-//            }
-//        }
-//        catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return reports;
-//    }
 }
