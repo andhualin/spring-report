@@ -3,7 +3,6 @@ package com.example.springreport;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -11,9 +10,25 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public class ReportParser {
-    public static List<Report> parseReport(String file) {
+
+    public static String parseDate(String file) {
+        Pattern pattern = Pattern.compile("\\d\\d\\d\\d\\-\\d\\d\\-\\d\\d");
+        Matcher matcher = pattern.matcher(file);
+        if (matcher.find())
+        {
+            // set the date
+            return matcher.group();
+        }
+        else
+        {
+            System.out.println("Could not find date, setting to default date");
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            return dtf.format(LocalDateTime.now());
+        }
+    }
+
+    public static List<Report> parseFile(String file) {
         List<Report> reports = new ArrayList<>();
         BufferedReader reader;
         try {
@@ -27,29 +42,16 @@ public class ReportParser {
                 if (fields.length == 9) {
                     if (isDouble(fields[5]) && isDouble(fields[6]) && isBoolean(fields[8])) {
                         // remove whitespace in boolean field
-                        fields[8] = fields[8].replaceAll("\\s","");
+                        String seen = fields[8].replaceAll("\\s","");
 
-                        // todo: add in date first seen, right now default
-                        String dateFirstSeen = file;
-
-                        Pattern p = Pattern.compile("\\d\\d\\d\\d\\-\\d\\d\\-\\d\\d");   // the pattern to search for
-                        Matcher m = p.matcher(dateFirstSeen);
-                        if (m.find())
-                        {
-                            // parse out the regular expression .... idk
-                            dateFirstSeen = m.group();
-                        }
-                        else
-                        {
-                            System.out.println("Could not find date, setting to default date");
-                            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                            dateFirstSeen = dtf.format(LocalDateTime.now());
-                        }
+                        // search for date from file name
+                        String dateFirstSeen = parseDate(file);
 
                         // create new report and insert to db
                         Report report = new Report(fields[0], fields[1], fields[2], fields[3], fields[4],
-                                fields[5], fields[6], fields[7], fields[8], dateFirstSeen);
+                                fields[5], fields[6], fields[7], seen, dateFirstSeen);
                         reports.add(report);
+
                     } else {
                         System.err.print("LINE " + lineNumber + " (" + file +
                                 ") has invalid data formatting. Will not be added to the database.\n");
