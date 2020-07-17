@@ -22,7 +22,7 @@ public class SpringReportApplication {
 		List<Report> reports2 = ReportParser.parseFile(file2);
 
 		return (args) -> {
-			saveReportsToDb(reportgits, repository);
+			saveReportsToDb(reports, repository);
 			saveReportsToDb(reports2, repository);
 		};
 	}
@@ -31,7 +31,6 @@ public class SpringReportApplication {
 	public static void saveReportsToDb(List<Report> reports, ReportRepository repository) {
 		for (Report r : reports) {
 			List<Report> reportsMatch = repository.findReportFromUniqueIdNative(r.getKey());
-//			if (!reportsMatch.isEmpty()) { reportMatch = reportsMatch.get(0); }
 			if (reportsMatch.isEmpty()) {
 				repository.save(r);
 			} else {
@@ -44,10 +43,10 @@ public class SpringReportApplication {
 			}
 		}
 		// testing - hardcoded
-		List<Report> earlyDate = repository.findReportFromDateNative("2020-06-24");
-		System.out.println("06-24 vulnerabilities: " + earlyDate.size());
-		List<Report> lateDate = repository.findReportFromDateNative("2020-06-25");
-		System.out.println("06-25 vulnerabilities: " + lateDate.size());
+//		List<Report> earlyDate = repository.findReportFromDateNative("2020-06-24");
+//		System.out.println("06-24 vulnerabilities: " + earlyDate.size());
+//		List<Report> lateDate = repository.findReportFromDateNative("2020-06-25");
+//		System.out.println("06-25 vulnerabilities: " + lateDate.size());
 	}
 
 	public static void dedupe(Report r, Report reportMatch, ReportRepository repository) {
@@ -56,8 +55,12 @@ public class SpringReportApplication {
 			// if the title column is different, update the unique id and insert
 			if (!r.getTitle().equals(reportMatch.getTitle())) {
 				r.setKey(r.getKey() + ":" + r.getTitle().hashCode());
-				repository.save(r);
-				System.out.println("Key already exists in file with different title." +
+				// check db again based on newly generated key
+				List<Report> reportsMatch = repository.findReportFromUniqueIdNative(r.getKey());
+				if (reportsMatch.isEmpty()) {
+					repository.save(r);
+				}
+				System.out.println("Key already exists in file with different title. " +
 						"Inserting new row with key: " + r.getKey());
 			}
 		}

@@ -1,0 +1,11 @@
+.grid-column {
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.grid {
+    font-family: Roboto, sans-serif;
+    --vaadin-grid-cell: {
+        padding: 0;
+    };
+}
