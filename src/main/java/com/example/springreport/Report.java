@@ -45,6 +45,8 @@ public class Report {
 
     private String dateFirstSeen;
 
+    private String status;
+
     public Report() {}
 
     public Report(String key,
@@ -56,7 +58,8 @@ public class Report {
                   String priority,
                   String fullText,
                   String seen,
-                  String dateFirstSeen) {
+                  String dateFirstSeen,
+                  String status) {
         this.key = key;
         this.scanTool = scanTool;
         this.application = application;
@@ -67,6 +70,7 @@ public class Report {
         this.fullText = fullText;
         this.seen = seen;
         this.dateFirstSeen = dateFirstSeen;
+        this.status = status;
     }
 
     public Long getId() {
@@ -157,6 +161,14 @@ public class Report {
         this.dateFirstSeen = dateFirstSeen;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -177,8 +189,4 @@ public class Report {
         return Objects.hash(this.id, this.key, this.scanTool, this.application,
                 this.component, this.title, this.severity, this.priority, this.fullText, this.seen);
     }
-
-//    public String getDateFirstSeen() { return dateFirstSeen; }
-//
-//    public void setDateFirstSeen(String dateFirstSeen) { this.dateFirstSeen = dateFirstSeen; }
 }

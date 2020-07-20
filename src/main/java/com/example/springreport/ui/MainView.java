@@ -1,34 +1,36 @@
 package com.example.springreport.ui;
 
 import com.example.springreport.Report;
-import com.example.springreport.ReportParser;
+import com.example.springreport.ReportProcessor;
 import com.example.springreport.ReportRepository;
 import com.example.springreport.SpringReportApplication;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.CssImport;
-import com.vaadin.flow.component.dependency.StyleSheet;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@CssImport("style-sheet.css")
-@CssImport(value="grid.css", themeFor = "vaadin-grid")
 @Route(value="main") // localhost:8080/main
+@CssImport("./style-sheet.css")
+@CssImport(value="./grid.css", themeFor = "vaadin-grid")
 @PageTitle("Reports UI")
 @Theme(value = Lumo.class)
 public class MainView extends VerticalLayout {
@@ -36,6 +38,7 @@ public class MainView extends VerticalLayout {
     private ReportRepository repository;
     Grid<Report> gridNew;
     Grid<Report> gridAll;
+    private Report selectedReport;
 
     public MainView(ReportRepository repository) {
         this.repository = repository;
@@ -56,45 +59,119 @@ public class MainView extends VerticalLayout {
         gridNew.removeColumnByKey("scanTool");
         gridNew.removeColumnByKey("fullText");
         gridNew.removeColumnByKey("dateFirstSeen");
+        gridNew.removeColumnByKey("status");
         gridNew.setWidth("1600px");
-        gridNew.getColumnByKey("application").setWidth("300px");
-        gridNew.getColumnByKey("component").setWidth("550px");
-        gridNew.getColumnByKey("title").setWidth("650px");
+        gridNew.getColumnByKey("application").setWidth("200px")
+                .setSortable(false);
+        gridNew.getColumnByKey("component").setWidth("500px")
+                .setSortable(false);
+        gridNew.getColumnByKey("title").setWidth("600px")
+                .setSortable(false);
         gridNew.getColumnByKey("application").setClassNameGenerator(item -> {return "grid-column";});
         gridNew.getColumnByKey("component").setClassNameGenerator(item -> {return "grid-column";});
         gridNew.getColumnByKey("title").setClassNameGenerator(item -> {return "grid-column";});
         gridNew.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
+        gridNew.setSelectionMode(Grid.SelectionMode.NONE);
 
         // Grid that displays all entries in db
         gridAll = new Grid<>(Report.class);
         gridAll.setClassNameGenerator(item -> {return "grid";});
         gridAll.setVerticalScrollingEnabled(true);
         gridAll.setWidthFull();
-        listAll(gridAll);
-        gridAll.removeColumnByKey("severity");
-        gridAll.removeColumnByKey("priority");
+        gridAll.setItems(repository.findAll());
         gridAll.removeColumnByKey("key");
         gridAll.removeColumnByKey("id");
         gridAll.removeColumnByKey("scanTool");
         gridAll.removeColumnByKey("fullText");
         gridAll.removeColumnByKey("dateFirstSeen");
         gridAll.setWidth("1600px");
-        gridAll.getColumnByKey("application").setWidth("300px");
-        gridAll.getColumnByKey("component").setWidth("550px");
-        gridAll.getColumnByKey("title").setWidth("650px");
-        gridAll.getColumnByKey("application").setClassNameGenerator(item -> {return "grid-column";});
-        gridAll.getColumnByKey("component").setClassNameGenerator(item -> {return "grid-column";});
-        gridAll.getColumnByKey("title").setClassNameGenerator(item -> {return "grid-column";});
         gridAll.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
-        gridAll.setHeight("700px");
+        gridAll.setHeight("650px");
+        gridAll.setSelectionMode(Grid.SelectionMode.SINGLE);
+        gridAll.getColumnByKey("application").setWidth("200px")
+                .setClassNameGenerator(item -> {return "grid-column";});
+        gridAll.getColumnByKey("component").setWidth("500px")
+                .setSortable(false)
+                .setClassNameGenerator(item -> {return "grid-column";});
+        gridAll.getColumnByKey("title").setWidth("500px")
+                .setSortable(false)
+                .setClassNameGenerator(item -> {return "grid-column";});
+        gridAll.getColumnByKey("severity").setWidth("60px")
+                .setSortable(false)
+                .setClassNameGenerator(item -> {return "grid-column";});
+        gridAll.getColumnByKey("priority").setWidth("60px")
+                .setSortable(false)
+                .setClassNameGenerator(item -> {return "grid-column";});
+        gridAll.getColumnByKey("status").setWidth("100px")
+                .setSortable(false)
+                .setClassNameGenerator(item -> {return "grid-column";});
+        gridAll.setColumnOrder(gridAll.getColumnByKey("application"),
+                gridAll.getColumnByKey("component"),
+                gridAll.getColumnByKey("title"),
+                gridAll.getColumnByKey("severity"),
+                gridAll.getColumnByKey("priority"),
+                gridAll.getColumnByKey("status"));
+
+        Button openDialogButton = new Button("View Selected Row");
+        Dialog dialog = new Dialog();
+        dialog.setWidth("1000px");
+        dialog.setHeight("700px");
+        Label reportId = new Label();
+        Label reportDate = new Label();
+        Label reportTitle = new Label();
+        Label reportApp = new Label();
+        Label reportComponent = new Label();
+        Label reportFull = new Label();
+        TextField priorityField = new TextField();
+        TextField severityField = new TextField();
+        TextField statusField = new TextField();
+
+        Button buttonSubmit = new Button("Update Entry", event -> {
+            if (selectedReport != null) {
+                selectedReport.setSeverity(severityField.getValue());
+                selectedReport.setPriority(priorityField.getValue());
+                selectedReport.setStatus(statusField.getValue());
+                repository.save(selectedReport);
+                gridAll.getDataProvider().refreshAll();
+            }
+            dialog.close();
+        });
+
+        VerticalLayout dialogLayout = new VerticalLayout(reportId, reportDate, reportApp, reportComponent, reportTitle, reportFull,
+                severityField, priorityField, statusField, buttonSubmit);
+        dialog.add(dialogLayout);
+        openDialogButton.addClickListener(event -> dialog.open());
+
+        gridAll.addSelectionListener(selectionEvent -> {
+            selectionEvent.getFirstSelectedItem().ifPresent(report -> {
+                selectedReport = report;
+                reportId.setText("Report Id: " + report.getId());
+                reportDate.setText("Date First Seen: " + report.getDateFirstSeen());
+                reportApp.setText("Application: " + report.getApplication());
+                reportComponent.setText("Component: " + report.getComponent());
+                reportTitle.setText("Title: " + report.getTitle());
+//                reportTitle.setText(("Full Text: " + report.getFullText()));
+
+                severityField.setValue(report.getSeverity());
+                severityField.setLabel("Severity");
+
+                priorityField.setValue(report.getPriority());
+                priorityField.setLabel("Priority");
+
+                statusField.setValue(report.getStatus());
+                statusField.setLabel("Status");
+            });
+        });
 
         Tab tab1 = new Tab("View All");
         Div page1 = new Div();
         page1.setWidth("100%");
-        page1.setText("All entries from " +
-                SpringReportApplication.file1 + " and " + SpringReportApplication.file2 + ": \n");
+        page1.setText(repository.count() + " entries added from " +
+                SpringReportApplication.file1 + " and " + SpringReportApplication.file2 + ".");
         page1.add(gridAll);
-        page1.add(new Label("Total entries from both reports: " + repository.count()));
+        VerticalLayout vl = new VerticalLayout();
+        vl.add(openDialogButton);
+        page1.add(vl);
 
         Tab tab2 = new Tab("View New");
         Div page2 = new Div();
@@ -104,11 +181,11 @@ public class MainView extends VerticalLayout {
                 SpringReportApplication.file2 + " against " + SpringReportApplication.file1 + ": \n"));
         page2.add(gridNew);
 
-        Tab tab3 = new Tab("Update Entries");
+        Tab tab3 = new Tab("Cats");
         Div page3 = new Div();
         page3.setWidthFull();
-        page3.setText("TODO: Search for entries and update them \n");
         page3.setVisible(false);
+        page3.setText("/ᐠ｡‸｡ᐟ\\");
 
         Map<Tab, Component> tabsToPages = new HashMap<>();
         tabsToPages.put(tab1, page1);
@@ -131,13 +208,8 @@ public class MainView extends VerticalLayout {
         add(tabs,pages);
     }
 
-    private void listNewFound(Grid grid) {
-        String date = ReportParser.parseDate(SpringReportApplication.file2);
+    private void listNewFound(Grid<Report> grid) {
+        String date = ReportProcessor.parseDate(SpringReportApplication.file2);
         grid.setItems(repository.findReportFromDateNative(date));
-    }
-
-    private void listAll(Grid grid) {
-        grid.setItems(repository.findAll());
-        List<Report> list = repository.findAll();
     }
 }

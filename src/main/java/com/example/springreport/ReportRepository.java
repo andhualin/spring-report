@@ -25,5 +25,4 @@ public interface ReportRepository extends JpaRepository<Report, Long>{
     @Query(nativeQuery =  true,
             value = "SELECT * FROM Report r WHERE r.date_first_seen = :dateFirstSeen")
     List<Report> findReportFromDateNative(@Param("dateFirstSeen") String dateFirstSeen);
-
 }
