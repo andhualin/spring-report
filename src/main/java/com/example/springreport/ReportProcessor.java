@@ -32,7 +32,7 @@ public class ReportProcessor {
                         String dateFirstSeen = parseDate(file);
 
                         // default status
-                        String status = "default";
+                        String status = "New";
 
                         // create new report and insert to db
                         Report report = new Report(fields[0], fields[1], fields[2], fields[3], fields[4],
