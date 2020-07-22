@@ -72,4 +72,11 @@ public class ReportController {
     public List<Report> getAllReportByDateFirstSeen(@RequestParam String date) {
         return repository.findReportFromDateNative(date);
     }
+
+    // GET reports from a date
+    @GetMapping(value = "/reports/distinctDates")
+    public List<String> getDistinctDates() {
+        return repository.findDistinctDatesNative();
+    }
+
 }

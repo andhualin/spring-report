@@ -1,12 +1,11 @@
 package com.example.springreport.ui;
 
 import com.example.springreport.Report;
-import com.example.springreport.ReportProcessor;
 import com.example.springreport.ReportRepository;
-import com.example.springreport.SpringReportApplication;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
@@ -28,6 +27,10 @@ import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 import org.apache.commons.lang3.StringUtils;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +46,6 @@ import java.util.stream.Stream;
 public class MainView extends VerticalLayout {
 
     private ReportRepository repository;
-    Grid<Report> gridNew;
-    Grid<Report> gridAll;
     private Report selectedReport;
 
     public MainView(ReportRepository repository) {
@@ -55,12 +56,14 @@ public class MainView extends VerticalLayout {
         title.getElement().getStyle().set("fontWeight","bold");
 
         // Grid that displays new entries found from latest report
-        createGridWithLatestReports();
+        Grid<Report> gridNew = new Grid<>(Report.class);
+        createGridWithLatestReports(gridNew);
 
         // Grid that displays all entries in db
-        createGridWithAllReports();
+        Grid<Report> gridAll = new Grid<>(Report.class);
+        createGridWithAllReports(gridAll);
 
-        // create filters & add to gridAll
+        // create search filters & add to gridAll
         List<Report> personList = repository.findAll();
         ListDataProvider<Report> dataProvider = new ListDataProvider<>(
                 personList);
@@ -72,13 +75,38 @@ public class MainView extends VerticalLayout {
         TextField severityFilter = new TextField();
         TextField priorityFilter = new TextField();
         TextField statusFilter = new TextField();
-        createColumnFilter(applicationFilter, dataProvider, filterRow, "application");
-        createColumnFilter(componentFilter, dataProvider, filterRow, "component");
-        createColumnFilter(titleFilter, dataProvider, filterRow, "title");
-        createColumnFilter(severityFilter, dataProvider, filterRow, "severity");
-        createColumnFilter(priorityFilter, dataProvider, filterRow, "priority");
-        createColumnFilter(statusFilter, dataProvider, filterRow, "status");
+        createColumnFilter(applicationFilter, dataProvider, filterRow, "application", gridAll);
+        createColumnFilter(componentFilter, dataProvider, filterRow, "component", gridAll);
+        createColumnFilter(titleFilter, dataProvider, filterRow, "title", gridAll);
+        createColumnFilter(severityFilter, dataProvider, filterRow, "severity", gridAll);
+        createColumnFilter(priorityFilter, dataProvider, filterRow, "priority", gridAll);
+        createColumnFilter(statusFilter, dataProvider, filterRow, "status", gridAll);
 
+        // checkbox to hide issues marked "Resolved" todo: debug
+        Checkbox checkbox = new Checkbox();
+        checkbox.setLabel("Hide resolved issues");
+        checkbox.setValue(false);
+        checkbox.addValueChangeListener(event -> {
+            if (event.getValue() == null) {
+//                value.setText("No option selected");
+//                dataProvider.clearFilters();
+            } else {
+//                value.setText("Selected: " + event.getValue());
+                // filter out the Resolved issues ...... iguess..........
+                //                report -> StringUtils.containsIgnoreCase(report.getApplication(),
+                dataProvider.addFilter(
+                        report -> StringUtils.containsIgnoreCase(report.getStatus(), "resolved")
+                );
+//                        textField.getValue())));
+
+            }
+        });
+
+//        event -> dataProvider.addFilter(
+//                report -> StringUtils.containsIgnoreCase(report.getTitle(),
+//                        textField.getValue())));
+
+        // create pop-up for selected row
         Button openDialogButton = new Button("View Selected Row");
         Dialog dialog = new Dialog();
         dialog.setWidth("1000px");
@@ -109,12 +137,12 @@ public class MainView extends VerticalLayout {
                 repository.save(selectedReport);
                 gridAll.getDataProvider().refreshAll();
             }
+            selectStatus.setPlaceholder("");
             dialog.close();
         });
         buttonSubmit.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         HorizontalLayout buttonOptions = new HorizontalLayout(buttonSubmit, cancel);
-
         VerticalLayout dialogLayout = new VerticalLayout(reportId, reportDate, reportApp, reportComponent, reportTitle, reportFull,
                 severityField, priorityField, statusLayout, buttonOptions);
         dialog.add(dialogLayout);
@@ -141,11 +169,11 @@ public class MainView extends VerticalLayout {
             });
         });
 
+        // configure tabs
         Tab tab1 = new Tab("View All");
         Div page1 = new Div();
         page1.setWidth("100%");
-        page1.setText(repository.count() + " entries added from " +
-                SpringReportApplication.file1 + " and " + SpringReportApplication.file2 + ".");
+        page1.setText(repository.count() + " entries found.");
         page1.add(gridAll);
         VerticalLayout vl = new VerticalLayout();
         vl.add(openDialogButton);
@@ -155,8 +183,7 @@ public class MainView extends VerticalLayout {
         Div page2 = new Div();
         page2.setWidthFull();
         page2.setVisible(false);
-        page2.add(new Label("New vulnerabilities found from comparing " +
-                SpringReportApplication.file2 + " against " + SpringReportApplication.file1 + ": \n"));
+        page2.add(new Label("New vulnerabilities found in most recent scan from " + getMostRecentDate(repository)));
         page2.add(gridNew);
 
         Tab tab3 = new Tab("Cats");
@@ -182,12 +209,12 @@ public class MainView extends VerticalLayout {
             pagesShown.add(selectedPage);
         });
 
-        add(title);
+        add(title, checkbox);
         add(tabs,pages);
     }
 
     private void createColumnFilter(TextField textField, ListDataProvider<Report> dataProvider,
-                                    HeaderRow filterRow, String columnKey) {
+                                    HeaderRow filterRow, String columnKey, Grid<Report> gridAll) {
         if (columnKey.equals("application")) {
             textField.addValueChangeListener(event -> dataProvider.addFilter(
                     report -> StringUtils.containsIgnoreCase(report.getApplication(),
@@ -219,8 +246,7 @@ public class MainView extends VerticalLayout {
         textField.setSizeFull();
     }
 
-    private void createGridWithAllReports() {
-        gridAll = new Grid<>(Report.class);
+    private void createGridWithAllReports(Grid<Report> gridAll) {
         gridAll.setClassNameGenerator(item -> {return "grid";});
         gridAll.setVerticalScrollingEnabled(true);
         gridAll.setWidthFull();
@@ -259,11 +285,10 @@ public class MainView extends VerticalLayout {
                 gridAll.getColumnByKey("status"));
     }
 
-    private void  createGridWithLatestReports() {
-        gridNew = new Grid<>(Report.class);
+    private void  createGridWithLatestReports(Grid<Report> gridNew) {
         gridNew.setVerticalScrollingEnabled(true);
         gridNew.setWidth("100%");
-        listNewFound(gridNew);
+        setGridToLatestEntriesFound(gridNew);
         gridNew.removeColumnByKey("severity");
         gridNew.removeColumnByKey("priority");
         gridNew.removeColumnByKey("key");
@@ -272,22 +297,44 @@ public class MainView extends VerticalLayout {
         gridNew.removeColumnByKey("fullText");
         gridNew.removeColumnByKey("dateFirstSeen");
         gridNew.removeColumnByKey("status");
-        gridNew.setWidth("1600px");
+        gridNew.setWidth("1300px");
         gridNew.getColumnByKey("application").setWidth("200px")
-                .setSortable(false);
+                .setSortable(false)
+                .setClassNameGenerator(item -> {return "grid-column";});
         gridNew.getColumnByKey("component").setWidth("500px")
-                .setSortable(false);
-        gridNew.getColumnByKey("title").setWidth("600px")
-                .setSortable(false);
-        gridNew.getColumnByKey("application").setClassNameGenerator(item -> {return "grid-column";});
-        gridNew.getColumnByKey("component").setClassNameGenerator(item -> {return "grid-column";});
-        gridNew.getColumnByKey("title").setClassNameGenerator(item -> {return "grid-column";});
+                .setSortable(false)
+                .setClassNameGenerator(item -> {return "grid-column";});
+
+        gridNew.getColumnByKey("title").setWidth("500px")
+                .setSortable(false)
+                .setClassNameGenerator(item -> {return "grid-column";});
         gridNew.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
         gridNew.setSelectionMode(Grid.SelectionMode.NONE);
     }
 
-    private void listNewFound(Grid<Report> grid) {
-        String date = ReportProcessor.parseDate(SpringReportApplication.file2);
+    private void setGridToLatestEntriesFound(Grid<Report> grid) {
+        String date = getMostRecentDate(repository);
         grid.setItems(repository.findReportFromDateNative(date));
+    }
+
+    public static String getMostRecentDate(ReportRepository repo) {
+        List<String> dateStrings = repo.findDistinctDatesNative();
+        List<Date> dates = new ArrayList<>();
+        // convert to Date Object
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        for (String dateString : dateStrings) {
+            try {
+                Date date = formatter.parse(dateString);
+                dates.add(date);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        // compare dates and find the most recent
+        Date mostRecentDate = dates.get(0);
+        for (Date date : dates) {
+            if (date.compareTo(mostRecentDate) > 0) mostRecentDate = date;
+        }
+        return formatter.format(mostRecentDate);
     }
 }
