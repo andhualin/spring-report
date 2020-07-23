@@ -82,29 +82,24 @@ public class MainView extends VerticalLayout {
         createColumnFilter(priorityFilter, dataProvider, filterRow, "priority", gridAll);
         createColumnFilter(statusFilter, dataProvider, filterRow, "status", gridAll);
 
-        // checkbox to hide issues marked "Resolved" todo: debug
-        Checkbox checkbox = new Checkbox();
-        checkbox.setLabel("Hide resolved issues");
-        checkbox.setValue(false);
-        checkbox.addValueChangeListener(event -> {
-            if (event.getValue() == null) {
-//                value.setText("No option selected");
-//                dataProvider.clearFilters();
-            } else {
-//                value.setText("Selected: " + event.getValue());
-                // filter out the Resolved issues ...... iguess..........
-                //                report -> StringUtils.containsIgnoreCase(report.getApplication(),
-                dataProvider.addFilter(
-                        report -> StringUtils.containsIgnoreCase(report.getStatus(), "resolved")
-                );
-//                        textField.getValue())));
-
-            }
-        });
-
-//        event -> dataProvider.addFilter(
-//                report -> StringUtils.containsIgnoreCase(report.getTitle(),
-//                        textField.getValue())));
+        // checkbox to hide issues marked "Resolved"
+//        Checkbox checkbox = new Checkbox();
+//        checkbox.setLabel("Hide resolved issues");
+//        checkbox.setValue(false);
+//        checkbox.addValueChangeListener(event -> {
+//            if (event.getValue() != null) {
+//                if (checkbox.getValue().equals(true)) {
+//                    dataProvider.addFilter(
+////                            report -> StringUtils.containsNone(report.getStatus(), "Resolved")
+//                            report -> StringUtils.containsIgnoreCase(report.getStatus(), "resolved")
+//                    );
+//                } else {
+//                    dataProvider.setFilter(
+//                            report -> StringUtils.containsIgnoreCase(report.getStatus(), "")
+//                    );
+//                }
+//            }
+//        });
 
         // create pop-up for selected row
         Button openDialogButton = new Button("View Selected Row");
@@ -209,7 +204,7 @@ public class MainView extends VerticalLayout {
             pagesShown.add(selectedPage);
         });
 
-        add(title, checkbox);
+        add(title);
         add(tabs,pages);
     }
 
